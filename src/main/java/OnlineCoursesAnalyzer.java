@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,9 +65,6 @@ public class OnlineCoursesAnalyzer {
         Map<String, List<List<String>>> map = new HashMap<>();
         courses.stream().sorted(Comparator.comparing(o -> o.title)).forEach(course -> {
             List<String> inss = Arrays.stream(course.instructors.trim().split(",")).map(String::trim).toList();
-                if(course.title.equals("Supply Chain Design")){
-                    int a = 0;
-                }
                 for (String ins :
                         inss) {
                     if (map.containsKey(ins)) {
@@ -92,24 +90,45 @@ public class OnlineCoursesAnalyzer {
                     }
                     }
         });
-        System.out.println(map);
         return map;
 
     }
 
     //4
     public List<String> getCourses(int topK, String by) {
-        return null;
+        if(by.equals("hours")){
+            return courses.stream().sorted((o1, o2) -> (int) (o2.totalHours - o1.totalHours)).map(course -> course.title).distinct().limit(topK).toList();
+        }
+        else{
+            return courses.stream().sorted((o1, o2) -> (o2.participants - o1.participants)).map(course -> course.title).distinct().limit(topK).toList();
+        }
+
     }
 
     //5
     public List<String> searchCourses(String courseSubject, double percentAudited, double totalCourseHours) {
-        return null;
+        return courses.stream()
+                .filter(course -> course.subject.toLowerCase().contains(courseSubject.toLowerCase()))
+                .filter(course -> course.percentAudited >= percentAudited)
+                .filter(course -> course.totalHours <= totalCourseHours)
+                .map(course -> course.title)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     //6
     public List<String> recommendCourses(int age, int gender, int isBachelorOrHigher) {
-        return null;
+        Map<String, Double> aveargeMedian = courses.stream().collect(Collectors.groupingBy(course -> course.number, Collectors.averagingDouble(course -> course.medianAge)));
+        Map<String, Double> aveargeMale = courses.stream().collect(Collectors.groupingBy(course -> course.number, Collectors.averagingDouble(course -> course.percentMale)));
+        Map<String, Double> aveargeDegree = courses.stream().collect(Collectors.groupingBy(course -> course.number, Collectors.averagingDouble(course -> course.percentDegree)));
+        Map<String, Course> latestCourse = courses.stream()
+                .collect(Collectors.toMap(course -> course.number, Function.identity(),
+                        BinaryOperator.maxBy(Comparator.comparing(course -> course.launchDate))));
+
+        return courses.stream().collect(Collectors.toMap(course -> latestCourse.get(course.number).title, (course ->
+                (int)(Math.pow(age - aveargeMedian.get(course.number), 2) + Math.pow(gender * 100 - aveargeMale.get(course.number), 2) + Math.pow(isBachelorOrHigher * 100 - aveargeDegree.get(course.number),2)
+                )), (o1, o2) -> o1)).entrySet().stream().sorted((Comparator.comparingInt(Map.Entry::getValue))).map(Map.Entry::getKey).limit(10).toList();
     }
 
 }
@@ -178,4 +197,6 @@ class Course {
         this.percentFemale = percentFemale;
         this.percentDegree = percentDegree;
     }
+
+
 }
