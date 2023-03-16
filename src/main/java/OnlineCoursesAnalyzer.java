@@ -61,7 +61,40 @@ public class OnlineCoursesAnalyzer {
 
     //3
     public Map<String, List<List<String>>> getCourseListOfInstructor() {
-        return null;
+        Map<String, List<List<String>>> map = new HashMap<>();
+        courses.stream().sorted(Comparator.comparing(o -> o.title)).forEach(course -> {
+            List<String> inss = Arrays.stream(course.instructors.trim().split(",")).map(String::trim).toList();
+                if(course.title.equals("Supply Chain Design")){
+                    int a = 0;
+                }
+                for (String ins :
+                        inss) {
+                    if (map.containsKey(ins)) {
+                        if(inss.size() == 1){
+                            if(!map.get(ins).get(0).contains(course.title))
+                            map.get(ins).get(0).add(course.title);
+                        }
+                        else{
+                            if(!map.get(ins).get(1).contains(course.title))
+                            map.get(ins).get(1).add(course.title);
+                        }
+                    }
+                    else{
+                        map.put(ins, Arrays.asList(new ArrayList<>(), new ArrayList<>()));
+                        if(inss.size() == 1){
+                            if(!map.get(ins).get(0).contains(course.title))
+                            map.get(ins).get(0).add(course.title);
+                        }
+                        else{
+                            if(!map.get(ins).get(1).contains(course.title))
+                            map.get(ins).get(1).add(course.title);
+                        }
+                    }
+                    }
+        });
+        System.out.println(map);
+        return map;
+
     }
 
     //4
